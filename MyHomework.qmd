@@ -1,0 +1,54 @@
+---
+title: "My homework"
+format: html
+editor: visual
+embed-resources: true
+---
+
+Q.1)
+
+```{r}
+
+```
+
+Q.2)
+
+```{r}
+
+```
+
+Q.3
+
+```{r}
+
+```
+
+Q.4
+
+```{r}
+
+```
+
+Q.5
+
+```{r}
+
+```
+
+Q.6
+
+```{r}
+
+```
+
+Q.7
+
+```{r}
+
+```
+
+Q.8
+
+```{r}
+
+```
