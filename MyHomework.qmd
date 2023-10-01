@@ -8,47 +8,130 @@ embed-resources: true
 Q.1)
 
 ```{r}
-
+#| message: false
+library(tidyverse)
+# Read in the data 
+exercise_data <- read_csv("https://raw.githubusercontent.com/vaiseys/dav-course/main/Data/visualize_data.csv")
+glimpse(exercise_data)
 ```
 
-Q.2)
+Correlation is connected but probably a p-value of .5
 
 ```{r}
+cor(exercise_data$Exercise, exercise_data$BMI)
+```
 
+```{r}
+ggplot(data = exercise_data,
+   aes(x = Exercise,
+       y = BMI)) +
+    geom_point()
+```
+
+\
+Q.2)
+
+Q:"Before we move forward, we want to know what these variables capture. Run `?corruptDF` and tell me in your own words what `CPI2017` and `HDI2017` capture."
+
+A: Information on a variety of countries explaining each of their Human development index and Corruption perception index in the year 2017.
+
+```{r}
+#| message: false
+library(causact)
+glimpse(corruptDF)
+```
+
+```{r}
+#| message: false
+?corruptDF
 ```
 
 Q.3
 
+Q: Describe the relationship that you see
+
+A: Positive correlational relationship meaning as HDI increases, CPI increases.
+
 ```{r}
+ggplot(data = corruptDF,
+       aes(x = HDI2017,
+           y = CPI2017)) +
+  geom_point()
 
 ```
 
 Q.4
 
-```{r}
+Q:What are the differences? Which one do you prefer?
 
+A:The differences is that lm shows the correlation of the P-value. While gam shows the line of formation around the the data points.
+
+```{r}
+ggplot(data = corruptDF,
+       aes(x = HDI2017,
+           y = CPI2017)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+ggplot(data = corruptDF,
+       aes(x = HDI2017,
+           y = CPI2017)) +
+  geom_point() +
+  geom_smooth(method = "gam")
 ```
 
 Q.5
 
-```{r}
+Q:What do you see? Are patterns clear or is the graph too cluttered? What would be another way to get these trends by region but in a way to would be more legible?
 
+A:They were really clustered but it wasn't able to show the separation of regions but the facet wrap of regions separated them and made them look a lot more legible.
+
+```{r}
+ggplot(data = corruptDF,
+       aes(x = HDI2017,
+           y = CPI2017,
+           color = region,
+           fill = region)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap("region")
 ```
 
 Q.6
 
 ```{r}
-
+ggplot(data = corruptDF,
+       aes(x = HDI2017,
+           y = CPI2017,
+           color = region,
+           fill = region)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap("region") +
+  scale_x_reverse()
 ```
 
 Q.7
 
 ```{r}
-
+ggplot(data = corruptDF,
+       aes(x = HDI2017,
+           y = CPI2017,
+           color = region,
+           fill = region)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap("region") +
+  labs(x = "Human Development Index",
+       y = "Corruption Development Index",
+       title = "Correlation between HDI and CPI by Reigon In 2017",
+       subtitle = "Sources from Corrup DF")
 ```
 
 Q.8
 
 ```{r}
-
+ggsave("HDI_CDI_plot.png")
 ```
