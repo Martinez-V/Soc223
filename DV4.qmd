@@ -1,0 +1,164 @@
+---
+title: "DV4"
+format: html
+editor: visual
+embed-resources: true
+---
+
+Q.1)
+
+Q: It should look fairly messy. Can you draw any conclusions from it?
+
+A: The ratings are all clustered together and might show a trend as to what the average rating might be but its just an accumulation of so many that we can't really read the graph
+
+```{r}
+#| message: false
+library(tidyverse)
+
+# Read in the data 
+tv_ratings <- read_csv("https://raw.githubusercontent.com/vaiseys/dav-course/main/Data/tv_ratings.csv")
+
+# Glimpse the data 
+glimpse(tv_ratings)
+```
+
+```{r}
+tv_long <- tv_ratings %>% 
+  group_by(title) %>% 
+  summarise(num_seasons = n()) %>% 
+  ungroup() %>% 
+  left_join(tv_ratings, by = "title") 
+
+tv_long <- tv_long %>% 
+  filter(num_seasons >= 5)
+```
+
+```{r}
+ggplot(data = tv_long,
+       aes(x = date,
+           y = av_rating,
+           group = title)) +
+geom_line(alpha = .2)
+```
+
+Q.2)
+
+Q:What shows tend to last longer? Do ratings change much across seasons? Can you identify that show on `Drama, Family, Fantasy` whose ratings just plummeted?
+
+A:The shows that tend to last the longest are comedy,drama. the ratings also change heavily across the seasons depending on the genre. some stay relatively the same. "Are You Afraid of the Dark?" average ratings plummeted from an 8.9 to an 6.0 across season 5 to 6.
+
+```{r}
+ggplot(data = tv_long,
+       aes(x = date,
+           y = av_rating,
+           group = title)) +
+geom_line(alpha = .2) +
+  facet_wrap(~genres)
+```
+
+Q.3)
+
+Q:Tell me what `coord_flip()` does.
+
+What is the genre with the most top-rated shows?
+
+A: The coord_flip() helps the barplot X axis varaibles to be placed on the side and become a lot clearer what they say and which aligns to which, The genre with the most top rated shows is "Action,Adventure,Drama".
+
+```{r}
+tv_ratings9 <- tv_long %>% 
+  filter(av_rating > 9)
+```
+
+```{r}
+ggplot(data = tv_ratings9,
+      aes(x = genres)) +
+  geom_bar() +
+  coord_flip()
+```
+
+Q.4)
+
+Q:How does my prediction above hold? Are dramas rated higher?
+
+A:Yes, although drama is still not higher than comedy, It still rivals it in the averages only a .04 away from each other leaving comedy still being higher.
+
+```{r}
+comedies_dramas <- tv_ratings %>% 
+  mutate(is_comedy = if_else(str_detect(genres, "Comedy"), 
+                             1, 
+                             0)) %>% # If it contains the word comedy then 1, else 0
+  filter(is_comedy == 1 | genres == "Drama") %>% # Keep comedies and dramas
+  mutate(genres = if_else(genres == "Drama", # Make it so that we only have those two genres
+                          "Drama", 
+                          "Comedy"))
+
+glimpse(comedies_dramas)
+```
+
+```{r}
+ggplot(comedies_dramas,
+             aes(x = av_rating,
+                 group = genres,
+                 color = genres)) +
+  
+  geom_density()
+```
+
+```{r}
+comedies_dramas %>% 
+  group_by(genres) %>% 
+  summarize(mean_av = mean(av_rating))
+```
+
+Q.5)
+
+Q:What additional information does this give you? (Histogram) What do you notice? Of the three plots, which one do you think it's more informative?
+
+A: The amount of seasons looked into and in the data set for each genre. I notice that from geom_freqpoly it is similar to histogram except there is empty space in between. The best plot would be density because it highlights the size of the distribution rather that the actual amount of seasons or data points there are.
+
+```{r}
+ggplot(comedies_dramas,
+             aes(x = av_rating,
+                 group = genres,
+                 color = genres)) +
+  
+  geom_histogram()
+```
+
+```{r}
+ggplot(comedies_dramas,
+             aes(x = av_rating,
+                 group = genres,
+                 color = genres)) +
+  
+  geom_freqpoly()
+```
+
+Q.6)
+
+Q:What do you see? What additional information does this give you in comparison to a scatter plot?
+
+What patterns do you see? Can you identify that big outlier that apparently captured the nation?
+
+A: I see the heat map of where majority of the most of attention is. It helps figure out where the most activity there was specifically in what location.
+
+I see there weirdly enough there being most viewership at the average rating being at 8 rather than a higher average rating. The biggest outlier being at 25 shares during the average rating being at 8 for drama.
+
+```{r}
+ggplot(data = comedies_dramas,
+       aes(x = av_rating,
+           y = share)) +
+  geom_bin_2d()
+```
+
+```{r}
+ggplot(data = comedies_dramas,
+       aes(x = av_rating,
+           y = share)) +
+  geom_bin_2d() +
+  facet_wrap(~genres)
+```
+
+```{r}
+ggsave("DV4.png")
+```
