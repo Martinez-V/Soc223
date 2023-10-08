@@ -1,0 +1,16 @@
+---
+title: "10 minute lesson"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+Filter(month == 1 & origin == "LGA")
+```
+
+group by and ungroup at the end to find the
+
+summarize(across(c(
+
+in order to pair colums with functions such as means
