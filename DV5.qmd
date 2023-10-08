@@ -1,0 +1,171 @@
+---
+title: "DV5"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+# Read in the data 
+wncaa <- read_csv("https://raw.githubusercontent.com/vaiseys/dav-course/main/Data/wncaa.csv")
+
+# Glimpse the data 
+glimpse(wncaa)
+```
+
+Q.1)
+
+Q:What patterns do you see? Who are the two teams that have won the most?\
+A: Many are stacked on each other because they only have a singular win and two outliers whom have one an exceptional amount take a large amount of the win percentage. The two with the most are UCONN and Tennessee.
+
+```{r}
+wncaa_champs <- wncaa %>% 
+  filter(tourney_finish == "Champ")
+```
+
+```{r}
+champs_win_percentage<- wncaa_champs %>% 
+ group_by(school) %>% 
+ summarise(tourney_finish = n()/36)
+```
+
+```{r}
+champs_win_percentage_data <- champs_win_percentage
+ggplot(data = champs_win_percentage,
+       aes(x = tourney_finish,
+           y = school)) +
+  geom_col() +
+  labs(x = "Tournament Win Percentage",
+       y = "Schools") 
+```
+
+Q.2)
+
+Q:Describe the results? Any surprises? (after reorder)
+
+Try to make the same plot using `geom_violin()` instead of `geom_boxplot()`. Which visualization do you think is more informative? There's no right answer here but provide some reasoning to justify your choice.
+
+A: Uconn and Tennesee stand at the top of the function with most of their points belonging in the 1st seed.
+
+I believe that Violin shows a lot more information because of its inflation wherever there is an influx of point or the mean is particularlly located but both each have their benifits.
+
+```{r}
+champ_names <- unique(wncaa_champs$school)
+```
+
+```{r}
+winners <- wncaa %>% 
+  filter(school %in% champ_names)
+```
+
+```{r}
+ggplot(data = winners,
+       aes(x = school,
+           y = seed)) +
+  geom_boxplot() +
+  coord_flip()
+```
+
+```{r}
+ggplot(winners,
+       aes(x = seed,
+           y = school)) +
+geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = .2, alpha = .2)
+
+```
+
+```{r}
+winners_ <- winners %>% 
+  group_by(school) %>% 
+  mutate(mean_seed = mean(seed, na.rm = TRUE)) %>% 
+  ungroup()
+```
+
+```{r}
+ggplot(winners_,
+aes(x = seed,
+    y = reorder(school, -seed))) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(alpha = .2) +
+  labs(y = "Schools")
+```
+
+```{r}
+ggplot(winners_,
+aes(x = seed,
+    y = reorder(school, -seed))) +
+  geom_violin() +
+  geom_jitter(alpha = .2) +
+  labs(y = "Schools")
+```
+
+Q.3)
+
+Q:Try making the plot above but using `geom_point` only. Why does it not work very well?
+
+A: The points are trying to very clustered and are on top of points as well not really telling us the data we want nor need.
+
+```{r}
+ggplot(winners_,
+aes(x = seed,
+    y = reorder(school, -seed))) +
+  geom_point() +
+  geom_jitter(alpha = .2) +
+  labs(y = "Schools")
+```
+
+Q.4)
+
+Q:Which tournament winner had the lowest regular season win percentage?
+
+What is the school with the narrowest interval? What does this mean?
+
+Can you make the same plot using `geom_linerange` ? Do you think this is a good or bad idea? Why? There is no right answer; just give your reasoning.
+
+A: Texas A&M
+
+Texas A&M and this means in all of their wins they always ended up realtively the closest to their mean with no outliers.
+
+I don't think its a good idea because it's not contributing anything to the topic as much as point range.
+
+```{r}
+winners_mean_sd <- winners |> 
+  group_by(school) |> 
+  summarize(across(where(is.numeric),
+                   list(mean = mean,
+                        sd = sd)))
+```
+
+```{r}
+ggplot(winners_mean_sd,
+       aes(x = reorder(school, reg_percent_mean),
+           y = reg_percent_mean)) +
+  geom_point() +
+  coord_flip() +
+  labs(x = "Schools")
+```
+
+```{r}
+ggplot(winners_mean_sd,
+       aes(x = reorder(school, reg_percent_mean),
+           y = reg_percent_mean)) + 
+  geom_pointrange(aes(ymin = reg_percent_mean - reg_percent_sd,
+              ymax = reg_percent_mean + reg_percent_sd)) +
+geom_point() +
+  coord_flip() +
+  labs(x = "Schools")
+```
+
+```{r}
+ggplot(winners_mean_sd,
+       aes(x = reorder(school, reg_percent_mean),
+           y = reg_percent_mean)) + 
+  geom_linerange(aes(ymin = reg_percent_mean - reg_percent_sd,
+              ymax = reg_percent_mean + reg_percent_sd)) +
+geom_point() +
+  coord_flip() +
+  labs(x = "Schools")
+```
