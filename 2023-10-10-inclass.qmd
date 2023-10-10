@@ -1,0 +1,90 @@
+---
+title: "2023-10-10-inclass.qmd"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(moderndive)
+library(ggthemes)
+library(patchwork)
+theme_set(theme_light())
+```
+
+```{r}
+data(evals)
+glimpse(evals)
+```
+
+```{r}
+d <- evals |>
+  rename(bty = bty_avg,    # just shorter to type
+         sex = gender)     # actually what they have
+
+glimpse(d)
+```
+
+```{r}
+ggplot(d,
+       aes(x = score,
+           y = sex)) +
+  geom_jitter()
+```
+
+```{r}
+ggplot(d,
+       aes(x = score,
+           y = ethnicity)) +
+  geom_boxplot()
+```
+
+```{r}
+mod3 <- lm(score ~ age,
+           data = d)
+broom::tidy(mod3)
+```
+
+```{r}
+mod4 <- lm(score ~ pic_outfit,
+           data = d)
+broom::tidy(mod4)
+```
+
+```{r}
+ggplot(d,
+       aes(x = score,
+           y = pic_outfit)) +
+  geom_boxplot()
+```
+
+```{r}
+set.seed(12345)
+# fake data
+fd <- tibble(x1 = rnorm(n = 500,
+                        mean = 500,
+                        sd = 100),
+             x2 = rnorm(n = 500,
+                        mean = 500,
+                        sd = 50))
+# wider SD
+p1 <- ggplot(fd,
+             aes(x = x1)) +
+  geom_histogram(color = "white",
+                 boundary = 500,
+                 binwidth = 25) +
+  scale_x_continuous(limits = c(200,800))
+
+# narrower SD
+p2 <- ggplot(fd,
+             aes(x = x2)) +
+  geom_histogram(color = "white",
+                 boundary = 500,
+                 binwidth = 25) +
+  scale_x_continuous(limits = c(200,800))
+
+# put together
+p1 / p2
+```
