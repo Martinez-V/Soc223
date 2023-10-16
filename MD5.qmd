@@ -1,0 +1,228 @@
+---
+title: "MD5"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+library(tidyverse)
+library(moderndive)
+library(skimr)
+library(gapminder)
+```
+
+```{r}
+#| message: false
+library(tidyverse)
+
+twitch_data <- read_csv("https://raw.githubusercontent.com/vaiseys/dav-course/main/Data/twitchdata-update.csv")
+```
+
+```{r}
+#| message: false
+library(janitor)
+twitch_data <- clean_names(twitch_data)
+
+# Inspect new names
+colnames(twitch_data)
+```
+
+```{r}
+twitch_data %>% 
+sample_n(size = 5)
+```
+
+Q.1 Part a)
+
+Q:Describe the results in a few words. Does anything capture your attention?
+
+A:They all have very large watch time minutes but some have very low average viewers.
+
+```{r}
+twitch_data %>% 
+  select(average_viewers, followers) %>% 
+  summary()
+```
+
+Q.1 Part b)
+
+Q:Does anything capture your attention?
+
+A: The amount of followers doesn't equal amount of average viewers.
+
+```{r}
+ggplot(twitch_data,
+aes(x = average_viewers,
+    y = followers)) +
+  geom_jitter(alpha = .3)
+```
+
+Q.1 Part c)
+
+Q: What do you notice? (scatterplot)
+
+A: The points are very clustered at the bottom left.
+
+```{r}
+ggplot(twitch_data,
+aes(x = average_viewers,
+    y = followers)) +
+  geom_jitter(alpha = .3) +
+ scale_x_log10() +
+  scale_y_log10()
+```
+
+Q.1 Part d)
+
+Q: What do you see now? How does the relationship look like?
+
+A: They are a lot more open and up to scale and it looks like a positive relationship.
+
+```{r}
+twitch_data <- twitch_data %>% 
+  mutate(log_viewers = log10(average_viewers), 
+         log_followers = log10(followers))
+```
+
+Q.2)
+
+```{r}
+fit1 <- lm(log_viewers ~ log_followers, data = twitch_data)
+get_regression_table(fit1)
+```
+
+{r}
+
+tidy(fit1)
+
+Q.2 Part a)
+
+Q:Take the coefficient from your model and interpret it in this way.
+
+Equation: \$\$ 1.1\^(.588) = 1.057
+
+A: A 10% increase in followers is associated with a 5.7% increase in the average number of viewers
+
+Q.3)
+
+```{r}
+library(broom)
+
+pred_data <- augment(fit1)
+
+# glimpse our new data 
+glimpse(pred_data)
+```
+
+```{r}
+pred_data %>% 
+  ggplot(aes(x = log_followers, 
+             y = log_viewers)) +
+  geom_jitter(alpha = 0.4) + 
+  geom_line(aes(x = log_followers, 
+                y = .fitted), 
+            col = "orange") + 
+  theme_minimal() +
+  labs(subtitle = "Fitted Model and Raw Data", 
+       title = "Followers & Average Viewership", 
+       x = "log(followers)", 
+       y = "log(viewers)")
+```
+
+Q.3 Part A)
+
+Q:Do you think our model describes the relationship well?
+
+A: Yes, it goes through the majority of the function.
+
+Q.3 Part B)
+
+```{r}
+pred_data %>% 
+  ggplot(aes(x = log_followers, 
+             y = .resid)) +
+  geom_jitter(alpha = 0.4) + 
+  geom_smooth(method = lm) + 
+  theme_minimal() +
+  labs(subtitle = "Fitted Model and Raw Data", 
+       title = "Followers & Average Viewership", 
+       x = "log(followers)", 
+       y = "log(viewers)")
+```
+
+Q: What do you see? Are there any big residuals? DO they happen often in a particular range of our x-variable? If so, we would have a problem: our model would systematically fail to predict part of our data.
+
+A: There are some residuals off of the line but its normal going through the plot. They are often but they are mostly close to the line of best fit.
+
+Q.4)
+
+```{r}
+fit2 <- lm(log_viewers ~ language, data = twitch_data)
+get_regression_table(fit2)
+```
+
+```{r}
+tidy(fit2)
+```
+
+```{r}
+q_four <- augment(fit2)
+```
+
+```{r}
+q_four %>% 
+  ggplot(aes(x = log_viewers, 
+             y = language)) + 
+  geom_boxplot() +
+  theme_minimal() +
+  labs(subtitle = "Fitted Model and Raw Data", 
+       title = "Followers & Average Viewership", 
+       x = "log(followers)", 
+       y = "log(viewers)")
+```
+
+Q.5)
+
+```{r}
+twitch_data <- twitch_data %>% 
+  mutate(language = as.factor(language), 
+         language = relevel(language, ref = "English"))
+```
+
+```{r}
+twitch_data %>% 
+  ggplot(aes(x = log_viewers, 
+             y = language)) +
+  geom_jitter() + 
+  geom_line(aes(x = log_viewers, 
+                y = "English"), 
+            col = "orange") +
+  labs(subtitle = "Fitted Model and Raw Data", 
+       title = "Followers & Average Viewership", 
+       x = "Average viewers", 
+       y = "Languages")
+```
+
+Q:Interpret the results. How is my prediction doing?
+
+A: English is one of the highest means other than Spanish but it odes have quite a few outliers that have a lot of more viewers helping the prediction.
+
+Q.6)
+
+```{r}
+q_four %>% 
+  ggplot(aes(x = log_viewers, 
+             y = .resid)) +
+  geom_smooth(method = lm) + 
+  geom_jitter(alpha = .2) +
+  theme_minimal() +
+  labs(subtitle = "Fitted Model and Raw Data", 
+       title = "Followers & Average Viewership", 
+       x = "log(followers)", 
+       y = "log(viewers)")
+```
+
+Q:There are a couple of points our model really missed - which ones were they?
+
+A: The ones on the bottom left there seems to be a lot more than other grpahs shown.
