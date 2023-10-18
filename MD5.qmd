@@ -92,6 +92,8 @@ fit1 <- lm(log_viewers ~ log_followers, data = twitch_data)
 get_regression_table(fit1)
 ```
 
+Issue with rendering. Code chunk below
+
 {r}
 
 tidy(fit1)
