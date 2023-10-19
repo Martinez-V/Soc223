@@ -1,0 +1,184 @@
+---
+title: "MD6 demo"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(moderndive)
+library(ggthemes)
+library(patchwork)
+theme_set(theme_light())
+```
+
+```{r}
+data(evals)
+glimpse(evals)
+```
+
+```{r}
+d <- evals |>
+  rename(bty = bty_avg,    # just shorter to type
+         sex = gender)     # actually what they have
+
+glimpse(d)
+```
+
+```{r}
+mod1 <- lm(score ~ bty,
+           data = d)
+
+get_regression_table(mod1)
+```
+
+```{r}
+mod1_preds <- get_regression_points(mod1)
+
+head(mod1_preds)
+```
+
+intercept + measured variable (bty) multiplied by beauty score
+
+3,88 + 5(.067)
+
+```{r}
+ggplot(d,
+       aes(x = bty,
+           y = score)) +
+  geom_jitter(alpha = .3) +
+  geom_smooth(method = "lm",
+              se = FALSE) +
+  labs(x = "Beauty",
+       y = "Evaluation",
+       title = "Simple regression results")
+```
+
+ignore p value and statistical significance
+
+residuals
+
+```{r, echo=FALSE}
+ggplot(mod1_preds,
+       aes(x = bty,
+           y = residual)) +
+  geom_jitter(alpha = .3) +
+  geom_hline(yintercept = 0,
+             color = "blue") +
+  labs(x = "Beauty",
+       y = "Residual",
+       title = "Simple regression residuals")
+```
+
+Regression where
+
+(guess the average for everyone)
+
+shifts the residual line until its horizontal to show what "the graph thinks happend"
+
+quantify how well a predictor predicts the outcome is to use the \*\*variance\*\*
+
+```{r}
+var_y <- d |> 
+  pull(score) |> 
+  var()
+
+var_y
+```
+
+Average score deviation from the mean outcome (only scores not including beauty)
+
+if every number or category was the same in a column there is no variance
+
+```{r, echo=FALSE}
+ggplot(d,
+       aes(x = bty,
+           y = score)) +
+  geom_jitter(alpha = .3) +
+  geom_hline(yintercept = mean(d$score),
+             color = "blue") +
+  geom_smooth(method = "lm",
+              se = FALSE,
+              color = "red",
+              linetype = "dashed") +
+  labs(x = "Beauty",
+       y = "Evaluation",
+       title = "Mean vs. regression line")
+```
+
+Beauty as a predictor and using data to predict the data. helps improve our guess
+
+Now let's see what the spread looks like if we look at the residuals from the regression line
+
+```{r}
+var_yhat1 <- mod1_preds |> 
+  pull(residual) |> 
+  var()
+
+var_yhat1
+```
+
+\^ = guess
+
+hat = guess
+
+linear regression is a lot better always as an indicator for guesses
+
+how much does variance go down if beuaty dicates the scores
+
+```{r}
+1 - (var_yhat1 / var_y)
+```
+
+(var_y - var_yhat1)/ var_y = variance change
+
+```{r}
+broom::glance(mod1)
+```
+
+r.squared most important and don't look at anything else in the other points
+
+Comparing "ugliest" vs "pretiest" scores
+
+max(d\$bty)\* .067 - min(d\$bty)\*.067
+
+.4355 = .4 of a beauty score change a
+
+```{r}
+mod1 <- lm(score ~ age,
+           data = d)
+
+get_regression_table(mod1)
+```
+
+```{r}
+mod1_preds <- get_regression_points(mod1)
+
+head(mod1_preds)
+```
+
+```{r}
+var_y <- mod1_preds |> 
+  pull(score) |> 
+  var()
+
+var_y
+```
+
+```{r}
+1 - (var_yhat1 / var_y)
+```
+
+```{r}
+ggplot(mod1_preds,
+       aes(x = age,
+           y = residual)) +
+  geom_jitter(alpha = .3) +
+  geom_hline(yintercept = 0,
+             color = "blue") +
+  labs(x = "Age",
+       y = "Residual",
+       title = "Mean vs. regression line")
+```
