@@ -1,0 +1,55 @@
+---
+title: "multiple regression"
+format: html
+editor: visual
+embed-resources: true
+---
+
+Regression models of categories
+
+grade and how does fav color effect this
+
+\^Yi(grade) = d +b1(blue) + b2(green)
+
+d = refrence
+
+0/1 for both colors
+
+using 2 out of 3 finds out all categoties
+
+Multiple regression has more than 1 predictor(bty and sex)
+
+EX:
+
+```{r}
+mod3 <- lm(score ~ bty + sex,
+            data = d)
+get_regression_table(mod3)
+```
+
+This model assumes that the male has a slightly increased bty score
+
+How to draw non parallel lines: actually what it's trying to tell us
+
+scorei = d +b1() + b2() + b3()()
+
+"geom_parallel_slope
+
+```{r}
+mod4 <-  lm(score ~ bty + sex + bty:sex,
+            data = d)
+```
+
+bty:sex means bty depends on sex and makes the lines perpendicular
+
+scorei = 3.95 + .031(beautyi) + -.184(malei) + .080(beautyi x malei)
+
+beauty = whatever score they had
+
+male = 1 female = 0
+
+plug numbers into equations
+
+Her slope .031(b1)
+
+His slope .111 (b1 + b3)
