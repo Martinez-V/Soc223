@@ -1,0 +1,91 @@
+---
+title: "Md6 debrief"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+ptmodel <- lm(wage_percent_of_male ~ year + major_category,
+              data = gender_employment)
+
+intmodel <- lm(wage_percent_of_male ~ year * major_category,
+              data = gender_employment)
+```
+
+```{r}
+ptmodel |> 
+  get_regression_table() |> 
+  select(term, estimate) 
+```
+
+```{r}
+intmodel |> 
+  get_regression_table() |> 
+  select(term, estimate)
+```
+
+What's the best way to get predictions? Not by hand!
+
+```{r}
+pred_df <- tribble(
+  ~year, ~major_category,
+  2016, "service"
+)
+```
+
+You can get predictions on this "new" dataset.
+
+```{r}
+predict(ptmodel,
+        newdata = pred_df)
+```
+
+```{r}
+pred_df <- pred_df |> 
+  mutate(pt_pred = predict(ptmodel, newdata = pred_df),
+         int_pred = predict(intmodel, newdata = pred_df))
+
+pred_df
+```
+
+You can create more complicated prediction data frames, too.
+
+```{r}
+pred_df2 <- 
+  expand_grid(
+    major_category = c("Service", "Sales and Office"),
+    year = c(2013, 2016)
+  )
+
+pred_df2
+```
+
+2013:2016 all possible combinations
+
+```{r}
+pred_df2 <- 
+  expand_grid(
+    major_category = c("Service", "Sales and Office"),
+    year = c(2013, 2016)
+  )
+
+pred_df2
+```
+
+```{r}
+pred_df2 <- pred_df2 |> 
+  mutate(pt_pred = predict(ptmodel, newdata = pred_df2),
+         int_pred = predict(intmodel, newdata = pred_df2))
+
+pred_df2
+```
+
+```{r}
+ggplot(pred_df2,
+       aes(x = major_category,
+           y = int_pred,
+           group = factor(year),
+           fill = factor(year))) +
+  geom_col(position = "dodge")
+```
