@@ -1,0 +1,189 @@
+---
+title: "MD6"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(broom)
+# Set our ggplot theme from the outset
+theme_set(theme_light())
+# Read in the data 
+gender_employment <- read_csv("https://raw.githubusercontent.com/vaiseys/dav-course/main/Data/gender_employment.csv")
+
+# Glimpse at the data 
+glimpse(gender_employment)
+```
+
+```{r}
+gender_employment%>% 
+  ggplot(aes(x = year, y = wage_percent_of_male)) +
+  geom_jitter(alpha = 0.1) + 
+  geom_smooth(method = "lm") + 
+  labs(title = "Women's earnings with respect to men's", 
+       y = "% of Men's Income", 
+       x = "Year")
+```
+
+Q.1)
+
+```{r}
+gender_employment <- gender_employment %>% 
+  mutate(major_category = as.factor(major_category), 
+         major_category = relevel(major_category, ref = "Management, Business, and Financial"))
+```
+
+```{r}
+mod1 <- lm(wage_percent_of_male ~ year + major_category,
+           data = gender_employment) 
+
+broom::tidy(mod1)
+```
+
+Q: Part A: Calculate the wage percentage of male income for Sales and Office occupations on 2015.
+
+Part B:Now calculate the wage percentage of male income for Service occupations on 2016.
+
+A: Part A
+
+-306 + 2015(.192) - 3.32(1) = 77.56% wage percentage of male income for Sales and Office occupations on 2015
+
+Part B:
+
+-306 + 2016(.192) - 6.07 (1) = 75.02% wage percentage of male income for Service occupations on 2016
+
+\
+Q.2)
+
+{r}
+
+gender_employment %\>% 
+ ggplot(aes(x = year, y = wage_percent_of_male,
+ group = major_category)) +
+ geom_parallel_slopes(se = FALSE) +
+ labs(x = "Years",
+ y = "Wage Percentage Of Males")
+
+\^issues with rendering
+
+Q: What do you notice? Is the parallel trends assumption warranted?
+
+A: All the lines are the same parallel lines except starting off from different Y-intercepts and the assumption is warranted.
+
+Q.3)
+
+```{r}
+mod2 <- lm(wage_percent_of_male ~ year + major_category + year:major_category,
+           data = gender_employment)
+
+broom::tidy(mod2)
+```
+
+Q: Part A So tell me what the estimate would be for "Computer, Engineering, and Science" for 2016.
+
+Part B What about the same estimate but for "Service"?
+
+Part C Do you notice any differences?
+
+A: Part A -1370 + .72(2016) + 1002.8(1) - .494(1)(2016) = 88.416%
+
+Part B -1370 + .72(2016) + 2137.6(1) - -1.05(1)(2016) =4335.92%
+
+Part C The service estimate seems to have an immense increase of 4335.92% which is so much more than 88.416%
+
+\
+Q.4)
+
+Q: Given that we have the ability to add interactions to models - i.e. to have slopes vary across categories -, why would we choose to build a model that assumes parallel trends?
+
+A: They help to establish that each of these categories would start at different points and how they would progress from these points.
+
+Q.5)
+
+{r}
+
+simple_fit \<- lm(year \~ wage_percent_of_male,
+ data= gender_employment)
+
+get_regression_table(simple_fit)
+
+\^issues rendering
+
+```{r}
+gender_employment %>% 
+  select(year, wage_percent_of_male, percent_female) %>% 
+  cor(use = "complete.obs")
+```
+
+```{r}
+multiple_fit <- lm(wage_percent_of_male ~ year + percent_female,
+                   data = gender_employment)
+
+broom::tidy(multiple_fit)
+```
+
+Q: Part A Briefly, describe the results.
+
+Part B Describe the relationship between the variables
+
+Part C Describe the results in your own words. Is this what you would have expected?
+
+A: Part A The intercept is really high while the wage percent only being at .003
+
+Part B Across the years Wage percent of males increased a substatial amount in comparison to women
+
+Part C It indicate that the percent_female is substantially lower.
+
+Q.6)
+
+{r}
+
+simple_glanced \<- glance(simple_fit)
+
+\^issue rendering
+
+```{r}
+simple_glanced_multiple <- glance(multiple_fit)
+```
+
+{r}
+
+simple_glanced\$r.squared
+
+\^issue rendering
+
+```{r}
+simple_glanced_multiple$r.squared
+```
+
+Q: Part A Briefly tell me, in your own words, what R squared is.
+
+Part B Do this for both models and compare the R squared. What can you conclude from this?
+
+A: Part A a statistic that helps us judge how well the model is accurate
+
+Part B They are almost exactly the same meaning it is highly accurate.
+
+```{r}
+random_numbers <- rnorm(n = nrow(gender_employment), 
+                        mean = 0, 
+                        sd = 4)
+```
+
+```{r}
+gender_employment$random_noise <- random_numbers
+
+# New model 
+random_fit <- lm(wage_percent_of_male ~ year + percent_female + random_noise, data = gender_employment)
+```
+
+```{r}
+simple_random_fit <- glance(random_fit)
+```
+
+```{r}
+simple_random_fit$r
+```
