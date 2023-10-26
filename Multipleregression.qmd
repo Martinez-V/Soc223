@@ -53,3 +53,11 @@ plug numbers into equations
 Her slope .031(b1)
 
 His slope .111 (b1 + b3)
+
+prediction:
+
+intercept = -300
+
+-300 + 2016(.192) - .242(sv2)
+
+the second half of the equation depends on the actual category
