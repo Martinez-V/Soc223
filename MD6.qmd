@@ -60,12 +60,7 @@ Q.2)
 
 {r}
 
-gender_employment %\>% 
- ggplot(aes(x = year, y = wage_percent_of_male,
- group = major_category)) +
- geom_parallel_slopes(se = FALSE) +
- labs(x = "Years",
- y = "Wage Percentage Of Males")
+gender_employment %\>% ggplot(aes(x = year, y = wage_percent_of_male, group = major_category)) + geom_parallel_slopes(se = FALSE) + labs(x = "Years", y = "Wage Percentage Of Males")
 
 \^issues with rendering
 
@@ -105,8 +100,7 @@ Q.5)
 
 {r}
 
-simple_fit \<- lm(year \~ wage_percent_of_male,
- data= gender_employment)
+simple_fit \<- lm(year \~ wage_percent_of_male, data= gender_employment)
 
 get_regression_table(simple_fit)
 
