@@ -1,0 +1,21 @@
+---
+title: "Project-idea.qmd"
+format: html
+editor: visual
+embed-resources: true
+---
+
+You only need a few sentences (3-4) on your topic (or, better yet, specific research question). Name at least one dataset you might use as well, although you are allowed to change this later.
+
+I was thinking of comparing the transfer market price for Mexican players comparable to other countries. How do mexican soccer players transfer market price compare to other countries and are other contries more heavily prices than others? For example, Englishg and Spanish players always having a sterotype to be heavily prices overpriced that other countries. I would used worldfootballR, its' mapping directory, and transfermarket.
+
+```{r}
+#| message: false
+library(worldfootballR)
+```
+
+```{r}
+#| message: false
+mapped_players <- player_dictionary_mapping()
+dplyr::glimpse(mapped_players)
+```
