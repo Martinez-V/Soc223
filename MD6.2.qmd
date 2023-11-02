@@ -1,0 +1,214 @@
+---
+title: "MD6.2"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(moderndive)
+theme_set(theme_minimal())
+```
+
+```{r}
+#| message: false
+data(bikes, package = "bayesrules")
+glimpse(bikes)
+```
+
+Q.0)
+
+-   how many rows are in the dataset?
+
+    500
+
+-   what does each row represent?
+
+    A date
+
+-   what dates does the dataset cover?
+
+    time, tempeture, weather, and amount of rides among other intricacies
+
+-   what is the highest observed ridership in the dataset?
+
+    6946 rides
+
+-   what was the highest wind speed recorded in the dataset?
+
+34 windspeed
+
+Q.1)
+
+```{r}
+mod_temp <- lm(rides ~ temp_actual,
+             data = bikes)
+get_regression_table(mod_temp)
+```
+
+```{r}
+get_correlation(rides ~ temp_feel,
+                data = bikes) |>
+  round(2)
+```
+
+```{r}
+mod_wind <- lm(rides ~ windspeed,
+             data = bikes)
+get_regression_table(mod_wind)
+```
+
+```{r}
+get_correlation(rides ~ windspeed,
+                data = bikes) |>
+  round(2)
+```
+
+Q: Part A What is the correlation between number of rides and what the temperature feels like (in Fahrenheit)?
+
+Part B What is the correlation between the number of rides and wind speed (miles per hour)?
+
+A: Part A correlation is 0.58
+
+Part B correlation is -0.19
+
+Q.2)
+
+```{r}
+bikes <- bikes %>% 
+  mutate(wind_kph = windspeed/1.61)
+```
+
+Q: What is the correlation between wind speed in MPH and wind speed in KPH? Explain why in enough detail that I know you understand.
+
+A:The correlation is 1 or 1.61 because they are the exact same. The only difference is in the measurement of speed between MPH and KPH and the conversion.
+
+Q.3)
+
+```{r}
+mod_mph <- lm(rides ~ windspeed,
+              data = bikes)
+get_regression_table(mod_mph)
+
+mod_kph <- lm(rides ~ wind_kph,
+              data = bikes)
+get_regression_table(mod_kph)
+```
+
+Q: If any coefficients are the same between models, explain why. If any coefficients are different between models, explain why. Make sure to give me enough detail to convince me you understand.
+
+A: The coefficient is the same at 4205.065 for the intercept meaning that is the starting intercept of rides for any day. The windspeed MPH and KPH are both different because of the 1.61 conversion and the data isnt taking into account the conversion of speed.
+
+Q.4)
+
+Q: Tell me what the predicted ridership would be if the wind is blowing at 20 KPH. What would the predicted ridership be if the wind is blowing at 20 MPH?
+
+A:
+
+KPH: 4205.065-89.392(20) = 2417.255 Rides
+
+MPH:4205.065-55.523(20) = 3094.605 Rides
+
+Q.5)
+
+```{r}
+bikes <- bikes |>
+  mutate(temp_c = (temp_feel - 32)*(5/9))
+```
+
+```{r}
+mod_kph_c <- lm(rides ~ wind_kph + temp_c,
+                data = bikes)
+get_regression_table(mod_kph_c)
+```
+
+Q: Interpret both of the slope coefficients using the following language:
+
+A: "For a 1 degree increase in temp_c, the model expects a 143.234 increase in the amount of rides."
+
+"For a 1 kilometer increase in the wind_kph, the model expects a 51.433 decrease in the amount of rides."
+
+The intercept counts for the amount of rides.
+
+Q.6)
+
+```{r}
+pred_df <- tibble(
+  situation = 1:3,
+  temp_c = c(25, 15, 10),
+  wind_kph = c(15, 5, 40)) 
+```
+
+```{r}
+predict(mod_kph_c,
+        newdata = pred_df)
+```
+
+```{r}
+pred_df <- pred_df |> 
+  mutate(ride_pred = predict(mod_kph_c, newdata = pred_df))
+
+pred_df
+```
+
+Q.7)
+
+```{r}
+bikes <- bikes %>% 
+  mutate(weekend = as.factor(weekend))
+
+ride_weekend <- lm(rides ~ wind_kph + temp_c + weekend,
+   data = bikes)
+```
+
+Q: Interpret the coefficient on `weekend` using a complete sentence.
+
+A: The regular amount of rides on any given day should be 1214.80. If it is the weekend true then the rides are automatically reduced by 713.58.
+
+Q.8)
+
+```{r}
+ride_weekend_tibble <- tibble(
+  situation = 1:2,
+  temp_c = c(10, 10),
+  wind_kph = c(15, 15),
+  weekend = c("TRUE","FALSE"))
+```
+
+```{r}
+ride_weekend_tibble <- ride_weekend_tibble |> 
+  mutate(ride_pred = predict(ride_weekend, newdata = ride_weekend_tibble))
+
+ride_weekend_tibble
+```
+
+```{r}
+predict(ride_weekend,
+        newdata = ride_weekend_tibble)
+```
+
+Q: If the temperature and the wind speed are average, what is the expected ridership for a weekend day? What is the expected ridership for a weekday?
+
+A: Weekend: 1111.976
+
+weekday: 1825.551
+
+Q.9)
+
+```{r}
+regression_points <- get_regression_points(ride_weekend)
+regression_points
+```
+
+```{r}
+regression_points %>% 
+  arrange(desc(residual))
+```
+
+Q:Use one of these functions to find the date with the *largest absolute residual*. That is, find the day where the model is most wrong about predicted ridership. Why is the model so wrong about this day? 
+
+A: The day was October 29th 2012 and that's when a category 1 hurricane occurred. This accounts to why the rides didn't correlate to expected rides.
+
+ID 439 = largest absolute residual = -3490.348
