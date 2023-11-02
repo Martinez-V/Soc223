@@ -1,0 +1,9 @@
+---
+title: "other peoples ideas for projects"
+format: html
+editor: visual
+embed-resources: true
+---
+
+1.  NYnicks and what are the various factors that allow them to be so bad
+2.  Do university types, region, and prestige etc. affect how much money people make.
