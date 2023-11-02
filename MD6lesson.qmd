@@ -1,0 +1,47 @@
+---
+title: "Md6 lesson"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+ggplot(bikes,
+       aes(x = date,
+           y = rides)) +
+  geom_point() +
+  geom_smooth()
+```
+
+```{r}
+model1 <- lm(rides ~ temp_actual,
+             data = bikes)
+get_regression_table(model1)
+```
+
+Rides = -2169 + 89.2 x Farenhight
+
+```{r}
+bikes <- bikes |>
+  mutate(temp_celsius = (temp_actual - 32)*(5/9))
+
+model1c <- lm(rides ~ temp_celsius,
+              data = bikes)
+get_regression_table(model1c)
+```
+
+```{r}
+get_correlation(rides ~ temp_celsius,
+                data = bikes) |>
+  round(2)
+```
+
+```{r}
+(89.2 * (sd(bikes$temp_actual)/ sd(bikes$rides))) |>
+  round(2)
+```
+
+```{r}
+(161 * (sd(bikes$temp_actual)/ sd(bikes$rides))) |>
+  round(2)
+```

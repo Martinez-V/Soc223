@@ -6,6 +6,24 @@ embed-resources: true
 ---
 
 ```{r}
+library(tidyverse)
+library(moderndive)
+```
+
+```{r}
+#| message: false
+library(tidyverse)
+library(broom)
+# Set our ggplot theme from the outset
+theme_set(theme_light())
+# Read in the data 
+gender_employment <- read_csv("https://raw.githubusercontent.com/vaiseys/dav-course/main/Data/gender_employment.csv")
+
+# Glimpse at the data 
+glimpse(gender_employment)
+```
+
+```{r}
 ptmodel <- lm(wage_percent_of_male ~ year + major_category,
               data = gender_employment)
 
@@ -49,6 +67,14 @@ pred_df <- pred_df |>
 pred_df
 ```
 
+pred_df \<- pred_df \|\>
+
+mutate(pt_pred = predict(ptmodel, newdata = pred_df),
+
+int_pred = predict(intmodel, newdata = pred_df))
+
+pred_df
+
 You can create more complicated prediction data frames, too.
 
 ```{r}
@@ -88,4 +114,33 @@ ggplot(pred_df2,
            group = factor(year),
            fill = factor(year))) +
   geom_col(position = "dodge")
+```
+
+different running variable:
+
+```{r}
+gender_employment <- gender_employment 
+  
+```
+
+80.2 percent of male percentage in 2013/ starting year
+
+Predictions:
+
+```{r}
+library(ggeffects)
+predictions <- ggpredict(mod,
+                         terms = "specific term"
+```
+
+not a straight line and ask for a paraboloa
+
+```{r}
+ggpredict(happy,
+          terms = "age",
+          ci = NA,) %>% 
+  plot() +
+  scale_x_continuous(breaks = from = 15,
+                     to = 100,
+                     by = 5)
 ```
