@@ -19,3 +19,13 @@ library(worldfootballR)
 mapped_players <- player_dictionary_mapping()
 dplyr::glimpse(mapped_players)
 ```
+
+```{r}
+Mapped_players %>% 
+  get_player_market_value
+
+```
+
+```{r}
+tm_league_team_url
+```
