@@ -1,0 +1,160 @@
+---
+title: "MD7"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(here)
+library(moderndive)
+library(readr)
+library(tibble)
+```
+
+```{r}
+#| message: false
+library(readr)
+nobel_winners <- read_csv("https://raw.githubusercontent.com/vaiseys/dav-course/main/Data/nobel_winners.csv")
+```
+
+```{r}
+nobel_winners_flt <- nobel_winners %>% 
+  filter(category != "Peace") %>% 
+  mutate(is_us = if_else(birth_country == "United States of America", 1, 0))
+```
+
+```{r}
+true_prop <- nobel_winners_flt %>% 
+  group_by(is_us) %>% 
+  summarise(prop = n()/nrow(nobel_winners_flt))
+
+ggplot() + 
+  coord_cartesian(xlim = c(0,1), ylim = c(0,1)) + 
+  geom_vline(xintercept = true_prop[2,2][[1]], linetype = "dashed")  + 
+  labs(x = "Proportion")
+```
+
+```{r}
+set.seed(33)
+# Random sample 
+our_sample <- sample_n(nobel_winners_flt, 
+                       size = 25, 
+                       replace = F)
+
+sample_prop <- our_sample %>% 
+  group_by(is_us) %>% 
+  summarise(prop = n()/nrow(our_sample))
+
+# How does our proportion look like? 
+ggplot() + 
+  coord_cartesian(xlim = c(0,1), ylim = c(0,1)) + 
+  geom_vline(xintercept = true_prop[2,2][[1]], linetype = "dashed")  + 
+  geom_vline(xintercept = sample_prop[2,2][[1]], linetype = "dotted", col = "red") +
+  labs(x = "Proportion")
+```
+
+Q.1)
+
+Q: In this scenario, what is the population?
+
+-   What is the sampling frame?
+
+-   A: Nobel prize winners in science then in the US
+
+-   What does the black line represent? (hint: the word population is in the name).
+
+-   A: The true proportion
+
+-   What does the red line represent?
+
+-   A: The random sample proportion of us born Nobel prize winners in a sample of 25 excluding women
+
+Q.2)
+
+```{r}
+nobel_25 <- nobel_winners_flt %>% 
+  rep_sample_n(size = 25, reps = 50) %>% 
+  group_by(replicate) %>% 
+  summarise(prop = sum(is_us)/25)
+```
+
+```{r}
+ggplot(nobel_25,
+      aes(x = prop)) +
+  geom_histogram(binwidth = .02) +
+  geom_vline(aes(xintercept = mean(prop)))
+```
+
+Q.3)
+
+```{r}
+nobel_100 <- nobel_winners_flt %>% 
+  rep_sample_n(size = 100, reps = 50) %>% 
+  group_by(replicate) %>% 
+  summarise(prop = sum(is_us)/100)
+```
+
+```{r}
+ggplot(nobel_100,
+      aes(x = prop)) +
+  geom_histogram(binwidth = .0052) +
+  geom_vline(aes(xintercept = mean(prop)))
+```
+
+Q.4)
+
+```{r}
+sd_nobel_25 <- nobel_winners_flt %>% 
+  rep_sample_n(size = 25, reps = 50) %>% 
+  summarise(prop = n()/nrow(nobel_winners_flt))
+```
+
+```{r}
+sd_nobel_100 <- nobel_winners_flt %>% 
+  rep_sample_n(size = 100, reps = 50) %>% 
+  summarise(prop = n()/nrow(nobel_winners_flt))
+```
+
+```{r}
+sd_nobel_25 %>% 
+  summarise(sd = sd(prop))
+```
+
+```{r}
+sd_nobel_100 %>% 
+  summarise(sd = sd(prop))
+```
+
+Q: Do these results support your argument above? What does this imply about sample size? What happens to the variability in our estimates as the sample size increases
+
+A: No this doesn't support the argument as it says there isnt and devation while there is. The sample size does increase proprtion but the variability stays the same.
+
+Q.5)
+
+```{r}
+nobel_winners_flt <- nobel_winners_flt %>% 
+  mutate(gender1 = if_else(gender == "Female", 1,0))
+```
+
+```{r}
+female_nobel <- nobel_winners_flt %>% 
+  rep_sample_n(size = 100, reps = 50) %>% 
+  group_by(replicate) %>% 
+  summarise(prop = sum(gender1)/50)
+```
+
+```{r}
+ggplot(female_nobel,
+      aes(x = prop)) +
+  geom_histogram(binwidth = .01) +
+  geom_vline(aes(xintercept = mean(prop)))
+```
+
+Q.6)
+
+Q: Explain the **Central Limit Theorem** it in your own words. Be as concise as you can (i.e., use no more than 3-4 sentences) but convince me you really understand the basic idea.
+
+A: As the size increases, the bell shape and the spread of the distribution decreases. This allows the distribution to continue and get close to the tru distribution proportion. The normality of a distribution is in accordance to the sample size. This normality is shown with a tall peak above the rest of the sample size.
