@@ -1,0 +1,378 @@
+---
+title: "MD 8+9 Demo"
+format: html
+editor: visual
+embed-resources: true
+---
+
+```{r}
+library(tidyverse)
+library(moderndive)
+theme_set(theme_minimal())
+```
+
+```{r}
+set.seed(1234)
+
+sim250 <- tibble(
+  simnum = 1:100) |>                      # set up replicate tibble
+  rowwise() |>                            # do the next bit row-by-row
+  mutate(prop_gop = mean(rbinom(n = 250,  # simulate the polls
+                         size = 1,
+                         prob = .53)) |> 
+           round(2))   
+```
+
+```{r}
+ggplot(sim250,
+       aes(x = prop_gop)) +
+  geom_bar(color = "white",
+           alpha = .4) +
+  geom_vline(xintercept = .53,
+             color = "red") +
+  annotate("text", 
+           x = .532, 
+           y = 2,
+           label = "true value",
+           angle = 90,
+           color = "red") +
+  scale_x_continuous(breaks = seq(from = .30, 
+                                  to = .70, 
+                                  by = .01),
+                     limits = c(.43, .63))
+```
+
+```{r}
+set.seed(123)
+
+sim1000 <- tibble(
+  simnum = 1:100) |>                       # set up replicate tibble
+  rowwise() |>                             # do the next bit row-by-row
+  mutate(prop_gop = mean(rbinom(n = 1000,  # simulate the polls
+                         size = 1,
+                         prob = .53)) |> 
+           round(2))                       # round to 2 decimals
+
+ggplot(sim1000,
+       aes(x = prop_gop)) +
+  geom_bar(color = "white",
+           alpha = .4) +
+  geom_vline(xintercept = .53,
+             color = "red") +
+  annotate("text", 
+           x = .532, 
+           y = 2,
+           label = "true value",
+           angle = 90,
+           color = "red") +
+  scale_x_continuous(breaks = seq(from = .30, 
+                                  to = .70, 
+                                  by = .01),
+                     limits = c(.43, .63))
+```
+
+```{r}
+library(patchwork)
+
+set.seed(123)
+
+# sampling dist simulation for N = 1000
+sim1000 <- tibble(
+  simnum = 1:1e5) |>                       # set up replicate tibble
+  rowwise() |>                             # do the next bit row-by-row
+  mutate(prop_gop = mean(rbinom(n = 1000,  # simulate the polls
+                         size = 1,
+                         prob = .53)))     # no rounding needed this time
+
+# sampling dist simulation for N = 250
+sim250 <- tibble(
+  simnum = 1:1e5) |>                       # set up replicate tibble
+  rowwise() |>                             # do the next bit row-by-row
+  mutate(prop_gop = mean(rbinom(n = 250,  # simulate the polls
+                         size = 1,
+                         prob = .53)))     # no rounding needed this time
+
+# plot of N = 1000 samples
+p1000 <- ggplot(sim1000,
+                aes(x = prop_gop)) +
+  geom_density(color = "white",
+               fill = "red",
+               alpha = .4) +
+  geom_vline(xintercept = .53,
+             color = "red") +
+  scale_x_continuous(breaks = seq(from = .30, 
+                                  to = .70, 
+                                  by = .01),
+                     limits = c(.45, .61)) +
+  scale_y_continuous(breaks = NULL) +
+  labs(title = "Sampling distribution for proportion, N = 1000",
+       y = "",
+       x = "Proportion GOP Vote")
+
+# plot of N = 250 samples
+p250 <- ggplot(sim250,
+               aes(x = prop_gop)) +
+  geom_density(color = "white",
+               fill = "red",
+               alpha = .4) +
+  geom_vline(xintercept = .53,
+             color = "red") +
+  scale_x_continuous(breaks = seq(from = .30, 
+                                  to = .70, 
+                                  by = .01),
+                     limits = c(.45, .61)) +
+  scale_y_continuous(breaks = NULL) +
+  labs(title = "Sampling distribution for proportion, N = 250",
+       y = "",
+       x = "Proportion GOP Vote")
+
+p1000/p250
+```
+
+\^central limit theorem
+
+```{r}
+set.seed(1108)
+
+# do the poll
+poll <- tibble(
+  vote_gop = rbinom(n = 1000,
+                    size = 1,
+                    prob = .53))
+
+# check out the data
+head(poll, n = 10)
+
+# what's the poll result?
+mean(poll$vote_gop)
+
+# plot the poll result
+ggplot(poll,
+       aes(x = factor(vote_gop,
+                      label = c("Dem", "Rep")))) +
+  geom_bar() +
+  labs(title = "Results of our ACTUAL poll",
+       x = "Intended vote",
+       y = "# of respondents")
+```
+
+```{r}
+library(infer)
+
+boot_reps <- poll |> 
+  specify(response = vote_gop) |>   # tell it what variable you're interested in
+  generate(reps = 1000)             # resample from own data 1000 times
+
+glimpse(boot_reps)
+```
+
+1000 samples x 1000 resamples = 1 million samples
+
+Re-sampling from the same data you had to see how certain or uncertain your data might be
+
+```{r}
+boot_dist <- boot_reps |> 
+  calculate(stat = "mean")          # like group_by() |> summarize()
+
+glimpse(boot_dist)
+```
+
+```{r}
+visualise(boot_dist)
+```
+
+```{r}
+ci <- boot_dist |> 
+  get_confidence_interval(level = .95)
+
+ci
+```
+
+\^confidence interval percentage
+
+we are 95% confident that 48% - 54% would vpte for the republican candidate
+
+```{r}
+boot_dist |> 
+  visualize() + shade_confidence_interval(ci)
+```
+
+\^ infer package
+
+```{r}
+ci_se <- boot_dist |> 
+  get_ci(level = .95,
+         point_estimate = mean(poll$vote_gop),
+         type = "se")
+
+ci_se
+```
+
+```{r}
+sd(boot_dist$stat)
+```
+
+SD of 1.6% from the mean
+
+```{r}
+curve(dnorm(x,0,1),
+      from = -3,
+      to = 3)
+```
+
+Demo 9:
+
+```{r}
+library(tidyverse)
+library(infer)
+library(moderndive)
+library(patchwork)
+library(here)
+library(ggplot2movies)
+theme_set(theme_minimal())
+```
+
+```{r}
+set.seed(1234)
+
+promotions <- promotions |> 
+  rename(sex = gender)       # more accurate name
+
+promotions |>
+  sample_n(size = 6) |> 
+  head()
+```
+
+```{r}
+p1 <- ggplot(promotions,
+            aes(x = sex,
+                fill = decision)) +
+  geom_bar() +
+  labs(x = "Sex of name on resume") +
+  theme(legend.position = "top")
+
+p1
+```
+
+```{r}
+promotions |>  
+  group_by(sex, decision) |>  
+  tally()
+```
+
+\^Like a deck of cards
+
+```{r}
+promotions <- promotions |> 
+  mutate(promoted = if_else(decision == "promoted", 1, 0))
+```
+
+```{r}
+promotions |> 
+  group_by(sex) |> 
+  summarize(mean = mean(promoted))
+```
+
+mean of promotion by sex
+
+```{r}
+promotions_shuffled <- promotions_shuffled |> 
+  rename(sex = gender) |> 
+  mutate(promoted = if_else(decision == "promoted", 1, 0))
+
+# summary
+promotions_shuffled |> 
+  group_by(sex) |> 
+  summarize(mean = mean(promoted))
+```
+
+\^mixes numbers with sexes forgetting how they were connected
+
+```{r}
+p2 <- ggplot(promotions_shuffled,
+             aes(x = sex,
+                 fill = decision)) +
+  geom_bar() +
+  labs(x = "Sex of name on resume") +
+  theme(legend.position = "top")
+
+p1 + p2
+```
+
+\^Permuntation test
+
+```{r}
+observed_diff <- promotions |> 
+  specify(promoted ~ sex) |>             # outcome ~ predictor
+  calculate(stat = "diff in means",      # which stat we want
+            order = c("male", "female")) # male - female
+
+observed_diff
+```
+
+```{r}
+set.seed(12345)
+
+null_distribution <- promotions |>  
+  specify(formula = promoted ~ sex) |>  
+  hypothesize(null = "independence") |>  # meaning "no difference"
+  generate(reps = 1000, 
+           type = "permute") |>  
+  calculate(stat = "diff in means", 
+            order = c("male", "female"))
+null_distribution
+```
+
+```{r}
+visualize(null_distribution,
+          bins = 10)
+```
+
+```{r}
+visualize(null_distribution,
+          bins = 10) +
+  shade_p_value(obs_stat = observed_diff,
+                direction = "both")
+```
+
+```{r}
+null_distribution |> 
+  get_p_value(obs_stat = observed_diff,
+              direction = "both")
+```
+
+1000 permutations and only 46 times were in the shaded extreme.
+
+```{r}
+bootstrap_distribution <- promotions |>  
+  specify(formula = promoted ~ sex) |>  
+  generate(reps = 1000, 
+           type = "bootstrap") |>  
+  calculate(stat = "diff in means", 
+            order = c("male", "female"))
+
+visualize(bootstrap_distribution)
+```
+
+```{r}
+percentile_ci <- bootstrap_distribution |>  
+  get_confidence_interval(level = 0.95, type = "percentile")
+percentile_ci
+```
+
+```{r}
+visualize(bootstrap_distribution) + 
+  shade_confidence_interval(endpoints = percentile_ci)
+```
+
+```{r}
+movies_sample |> 
+  glimpse()
+```
+
+```{r}
+ggplot(data = movies_sample, aes(x = genre, y = rating)) +
+  geom_boxplot() +
+  geom_jitter(width = .2, alpha = .2) +
+  labs(y = "IMDb rating")
+```
