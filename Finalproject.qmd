@@ -1,0 +1,184 @@
+---
+title: "Final Project"
+format: html
+editor: visual
+embed-resources: true
+message: false
+echo: false
+---
+
+There has always been a sterotype tha players such as Brazillian and Spanish football players as overvalued just purely through nation. Is this actually true?
+
+```{r}
+#| message: false
+load("/Users/martinez/Downloads/playerdata.Rdata")
+```
+
+```{r}
+#| message: false
+library(tidyverse)
+library(moderndive)
+library(infer)
+library(ggeffects)
+library(broom)
+```
+
+```{r}
+big5_player_vals <- big5_player_vals %>%
+  arrange(desc(season_start_year)) %>% 
+   select(comp_name, region, country, season_start_year, squad, player_name, player_nationality, player_market_value_euro) %>% 
+  group_by(player_name) %>% 
+  slice_head(n=1) %>% 
+  filter(!is.na(player_market_value_euro))
+```
+
+```{r}
+top_nations <- big5_player_vals %>% 
+  filter(player_nationality == "England"| player_nationality == "Spain"| player_nationality == "France"| player_nationality == "Germany" |player_nationality == "Brazil" | player_nationality == "Italy")
+```
+
+Create a visual to show means and distribution and density of the market values for the observed nations of the world.
+
+```{r}
+ggplot(top_nations,
+                aes(x = player_market_value_euro)) +
+  geom_density(color = "white",
+               fill = "red",
+               alpha = .45) +
+  scale_x_log10() +
+  facet_wrap("player_nationality")
+```
+
+Average mean of players are higher for Spanish and Brazilian players but for Brazil, France and England there seems to been a large tail at the end where it might demonstrate a higher amount of the top expensive players across the top 6 most expensive nations.
+
+```{r}
+fit <- lm(player_market_value_euro ~ player_nationality,
+          data = top_nations)
+tidy(fit, conf.int = TRUE) |> 
+  select(term, estimate, conf.low, conf.high) |> 
+  knitr::kable(digits = 2)
+```
+
+```{r}
+fit <- lm(log(player_market_value_euro) ~ player_nationality,
+          data = top_nations)
+tidy(fit, conf.int = TRUE) |> 
+  select(term, estimate, conf.low, conf.high) |> 
+  knitr::kable(digits = 2)
+```
+
+```{r}
+ggpredict(fit, terms = "player_nationality") |> 
+  plot()
+```
+
+Comparrisons of the nations and the predicted values of euros dependent on nation. This means the prediction is that Brazil by far is predicted to be valued a lot more than other top valued nations.
+
+```{r}
+mod_euro <- lm(player_market_value_euro ~ player_nationality,
+             data = top_nations)
+get_regression_table(mod_euro)
+```
+
+```{r}
+regression_points <- get_regression_points(mod_euro) %>% 
+  arrange(desc(residual))
+```
+
+```{r}
+ggplot(regression_points,
+       aes(x = player_market_value_euro,
+           y = player_nationality)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_x_log10()
+```
+
+Residuals shows how many and how much these points are in relation to the residuals.
+
+```{r}
+x_bar <- top_nations %>% 
+  summarize(mean_euro = mean(player_market_value_euro))
+x_bar
+```
+
+```{r}
+resampled_means <- x_bar %>% 
+  group_by(player_name) %>% 
+  summarize(mean_euro = mean(mean_euro))
+resampled_means
+```
+
+Beginning to find out what "normal" or the mean/ median for the distribution is in order to understand if spain or brazil are over the mean or the rest.
+
+```{r}
+ggplot(resampled_means, aes(x = mean_euro)) +
+  geom_histogram(binwidth = .5, color = "white") +
+  scale_x_log10()
+```
+
+```{r}
+resampled_means %>% 
+  summarize(mean_of_means = mean(mean_euro))
+```
+
+r
+
+```{r}
+resampled_means %>% 
+  summarise(SE = sd(mean_euro))
+```
+
+```{r}
+x_bar %>% 
+  summarise(stat = mean(mean_euro))
+```
+
+```{r}
+x_bar %>% 
+  specify(response = mean_euro) %>% 
+  calculate(stat = "mean")
+```
+
+```{r}
+x_bar %>% 
+  specify(response = mean_euro)
+```
+
+```{r}
+x_bar %>% 
+  specify(formula = mean_euro ~ NULL)
+```
+
+```{r}
+x_bar %>% 
+  specify(response = mean_euro) %>% 
+  generate(reps = 500, type = "bootstrap")
+```
+
+```{r}
+bootstrap_distribution <- x_bar %>%
+  specify(response = mean_euro) %>% 
+  generate(reps = 500) %>% 
+  calculate(stat = "mean")
+bootstrap_distribution
+```
+
+```{r}
+visualize(bootstrap_distribution)
+```
+
+Final graph of total mean population.
+
+```{r}
+percentile_ci <- bootstrap_distribution %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+percentile_ci
+```
+
+```{r}
+visualize(bootstrap_distribution) + 
+  shade_confidence_interval(endpoints = percentile_ci)
+```
+
+The confidence interval of 95% revealed the lower portion and higher portion of the mean. Using this information, we are 95% confident that the mean is located in between 2600807 and 2994147. This means that according to the regression table, Brazilian soccer players are much higher valued than the rest of their competitors.
